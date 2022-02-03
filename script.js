@@ -12,13 +12,41 @@ function getRequestId() {
     }
     return str;
 }
-function isItemThere(requestName) {
-    const tabs = JSON.parse(localStorage.getItem("tabs") || "[]");
-    return Boolean(tabs.find((tab) => tab.title === requestName));
+function showModal({ message, onModalClose, onModalOpen, }) {
+    const modalBG = document.querySelector(".modal-backdrop");
+    const modal = document.querySelector(".modal");
+    onModalOpen === null || onModalOpen === void 0 ? void 0 : onModalOpen();
+    modalBG.style.display = "flex";
+    // modal.style.height = "50vh";
+    // modal.style.width = "35vw";
+    modal.style.display = "block";
+    modal.animate([
+        { height: 0, width: 0, opacity: 0 },
+        { height: "50vh", width: "35vw", opacity: 1 },
+    ], {
+        easing: "ease-in-out",
+        duration: 1000,
+        fill: "forwards",
+    });
+    modal.innerHTML = '<span class="modal-message">' + message + "</span>";
+    modalBG.onclick = () => {
+        modalBG.style.display = "none";
+        // modal.style.height = "0vh";
+        // modal.style.width = "0vw";
+        modal.animate([
+            { height: "50vh", width: "35vw", opacity: 1 },
+            { height: 0, width: 0, opacity: 0, display: "none" },
+        ], {
+            easing: "ease-in-out",
+            duration: 1000,
+            fill: "forwards",
+        });
+        onModalClose === null || onModalClose === void 0 ? void 0 : onModalClose();
+    };
 }
 const addTabBtn = document.querySelector(".fas.fa-plus");
 const tabsWrapper = document.querySelector(".tabs-wrapper");
-addTabBtn.addEventListener("click", () => {
+function addTaskTab() {
     const input = document.querySelector(".tab-input");
     if (input) {
         input.focus();
@@ -35,11 +63,19 @@ addTabBtn.addEventListener("click", () => {
             ev.preventDefault();
             const { value } = input;
             if (!value || !value.trim() || value.length > 30) {
-                alert("Invalid Request Title");
+                showModal({
+                    message: "Invalid Request Title",
+                    onModalOpen: () => input.blur(),
+                    onModalClose: () => input.focus(),
+                });
             }
             else {
                 if (isItemThere(value)) {
-                    alert("An Item with the same name already exists");
+                    showModal({
+                        message: "An Item with the same name already exists",
+                        onModalOpen: () => input.blur(),
+                        onModalClose: () => input.focus(),
+                    });
                 }
                 else {
                     const tabs = JSON.parse(localStorage.getItem("tabs") || "[]");
@@ -55,9 +91,42 @@ addTabBtn.addEventListener("click", () => {
                     });
                     localStorage.setItem("tabs", JSON.stringify(tabs));
                     tabsWrapper.removeChild(div);
-                    alert("Sucess!");
+                    showModal({
+                        message: "Your Request was created successfully!",
+                    });
+                    renderTasks();
                 }
             }
         };
     }
-});
+}
+function renderTasks() {
+    tabsWrapper.innerHTML = "";
+    const tabs = JSON.parse(localStorage.getItem("tabs") || "[]");
+    if (tabs.length === 0) {
+        tabsWrapper.innerHTML = `<span>No Tasks Available !</span>`;
+    }
+    else {
+        tabs.forEach((tab) => {
+            const newTab = document.createElement("div");
+            newTab.classList.add("tab");
+            newTab.style.cursor = "pointer";
+            newTab.onclick = () => { };
+            newTab.innerHTML += `
+      <span>
+      ${tab.title}
+      </span>
+      
+      `;
+            tabsWrapper.appendChild(newTab);
+        });
+    }
+}
+function isItemThere(requestName) {
+    const tabs = JSON.parse(localStorage.getItem("tabs") || "[]");
+    return Boolean(tabs.find((tab) => tab.title === requestName));
+}
+window.onload = () => {
+    addTabBtn.addEventListener("click", addTaskTab);
+    renderTasks();
+};
