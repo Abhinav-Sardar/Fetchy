@@ -72,6 +72,9 @@ html {
   height: max-content;
   padding: 10px 0;
   border-radius: 5px;
+  justify-content: center;
+  align-items: center;
+  display: flex;
 }
 form.tab-form {
   height: 100%;

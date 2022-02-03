@@ -49,7 +49,7 @@ function showModal({
     ],
     {
       easing: "ease-in-out",
-      duration: 1000,
+      duration: 500,
       fill: "forwards",
     }
   );
@@ -66,7 +66,7 @@ function showModal({
       ],
       {
         easing: "ease-in-out",
-        duration: 1000,
+        duration: 500,
         fill: "forwards",
       }
     );
@@ -130,14 +130,21 @@ function addTaskTab(): void {
     };
   }
 }
-
+function deleteRequest(requestId: FetchyRequest["id"]) {
+  const tabs: FetchyRequest[] = JSON.parse(localStorage.getItem("tabs")!);
+  const tab = tabs.find((tab) => tab.id === requestId);
+  const index = tabs.indexOf(tab!);
+  tabs.splice(index, 1);
+  localStorage.setItem("tabs", JSON.stringify(tabs));
+  renderTasks();
+}
 function renderTasks(): void {
   tabsWrapper.innerHTML = "";
   const tabs: FetchyRequest[] = JSON.parse(
     localStorage.getItem("tabs") || "[]"
   );
   if (tabs.length === 0) {
-    tabsWrapper.innerHTML = `<span>No Tasks Available !</span>`;
+    tabsWrapper.innerHTML = `<span>No Requests Available !</span>`;
   } else {
     tabs.forEach((tab) => {
       const newTab = document.createElement("div");
@@ -148,6 +155,7 @@ function renderTasks(): void {
       <span>
       ${tab.title}
       </span>
+      <i class="far fa-trash-alt" style="margin-left:30px  ;  font-size:20px" onclick="deleteRequest('${tab.id}')"></i>
       
       `;
       tabsWrapper.appendChild(newTab);

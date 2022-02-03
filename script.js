@@ -25,7 +25,7 @@ function showModal({ message, onModalClose, onModalOpen, }) {
         { height: "50vh", width: "35vw", opacity: 1 },
     ], {
         easing: "ease-in-out",
-        duration: 1000,
+        duration: 500,
         fill: "forwards",
     });
     modal.innerHTML = '<span class="modal-message">' + message + "</span>";
@@ -38,7 +38,7 @@ function showModal({ message, onModalClose, onModalOpen, }) {
             { height: 0, width: 0, opacity: 0, display: "none" },
         ], {
             easing: "ease-in-out",
-            duration: 1000,
+            duration: 500,
             fill: "forwards",
         });
         onModalClose === null || onModalClose === void 0 ? void 0 : onModalClose();
@@ -100,11 +100,19 @@ function addTaskTab() {
         };
     }
 }
+function deleteRequest(requestId) {
+    const tabs = JSON.parse(localStorage.getItem("tabs"));
+    const tab = tabs.find((tab) => tab.id === requestId);
+    const index = tabs.indexOf(tab);
+    tabs.splice(index, 1);
+    localStorage.setItem("tabs", JSON.stringify(tabs));
+    renderTasks();
+}
 function renderTasks() {
     tabsWrapper.innerHTML = "";
     const tabs = JSON.parse(localStorage.getItem("tabs") || "[]");
     if (tabs.length === 0) {
-        tabsWrapper.innerHTML = `<span>No Tasks Available !</span>`;
+        tabsWrapper.innerHTML = `<span>No Requests Available !</span>`;
     }
     else {
         tabs.forEach((tab) => {
@@ -116,6 +124,7 @@ function renderTasks() {
       <span>
       ${tab.title}
       </span>
+      <i class="far fa-trash-alt" style="margin-left:30px  ;  font-size:20px" onclick="deleteRequest('${tab.id}')"></i>
       
       `;
             tabsWrapper.appendChild(newTab);
