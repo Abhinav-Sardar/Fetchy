@@ -1,17 +1,23 @@
 import "./index.css";
 import { AiOutlinePlus } from "react-icons/ai";
-import { FormEvent, useEffect, useRef, useState } from "react";
-import { FetchyRequest, getRandomKey, withStorage } from "./utils";
+import { createContext, FormEvent, useEffect, useRef, useState } from "react";
+import {
+  FetchyRequest,
+  getRandomKey,
+  RequestsContextType,
+  withStorage,
+} from "./utils";
 import Tabs from "./Tabs";
 import { setDefaultResultOrder } from "dns";
 import RequestArea from "./RequestArea";
+// @ts-ignore
+export const RequestsContext = createContext<RequestsContextType>();
 function App(): JSX.Element {
   const [requests, setRequests] = useState<FetchyRequest[]>([]);
   const [isEditing, setIsEditing] = useState<boolean>(false);
   const inpRef = useRef<HTMLInputElement>();
-  const [selectedRequest, setSelectedRequest] = useState<FetchyRequest | null>(
-    null
-  );
+  const [currentIndex, setCurrentIndex] = useState<number | null>(null);
+  const selectedRequest = requests.find((req, index) => index === currentIndex);
   const onSubmit = (e: FormEvent) => {
     e.preventDefault();
     const title = inpRef.current!.value;
@@ -25,6 +31,7 @@ function App(): JSX.Element {
       id: getRandomKey(),
       title: title.trimStart().trimEnd(),
       url: "",
+      method: "GET",
     };
     if (
       !title ||
@@ -51,7 +58,15 @@ function App(): JSX.Element {
         }
       });
     }
+    return () => {
+      document.removeEventListener("keyup", (e) => {
+        if (e.key === "Escape") {
+          setIsEditing(false);
+        }
+      });
+    };
   }, [isEditing]);
+
   useEffect(() => {
     const existingRequests = withStorage({ type: "get" }) as FetchyRequest[];
     setRequests(existingRequests);
@@ -60,56 +75,61 @@ function App(): JSX.Element {
   return (
     <div className="page">
       <div className="main-area">
-        <div className="tabs-wrapper">
-          <div className="add-fetch">
-            <span>Add A Request</span>{" "}
-            <AiOutlinePlus
-              style={{
-                marginLeft: "20px",
-                cursor: "pointer",
-              }}
-              onClick={() => {
-                if (isEditing) {
-                  return inpRef.current!.focus();
-                } else {
-                  setIsEditing(true);
-                }
-              }}
-            />
-          </div>
-          <div className="tabs">
-            {requests.length === 0 && !isEditing ? (
-              <div
+        <RequestsContext.Provider
+          value={{
+            requests,
+            setRequests,
+            currentIndex,
+            setCurrentIndex,
+            selectedRequest,
+          }}
+        >
+          <div className="tabs-wrapper">
+            <div className="add-fetch">
+              <span>Add A Request</span>{" "}
+              <AiOutlinePlus
                 style={{
-                  marginTop: "10px",
-                  fontSize: "20px",
+                  marginLeft: "20px",
+                  cursor: "pointer",
                 }}
-              >
-                No Requests Available
-              </div>
-            ) : (
-              <>
-                <Tabs
-                  requests={requests}
-                  setRequests={setRequests}
-                  setSelectedRequest={setSelectedRequest}
-                  selectedRequest={selectedRequest}
-                />
-                {isEditing && (
-                  <div className="tab">
-                    <form onSubmit={(e) => onSubmit(e)}>
-                      {/* @ts-ignore */}
-                      <input ref={inpRef} />
-                    </form>
-                  </div>
-                )}
-              </>
-            )}
+                onClick={() => {
+                  if (isEditing) {
+                    return inpRef.current!.focus();
+                  } else {
+                    setIsEditing(true);
+                  }
+                }}
+              />
+            </div>
+            <div className="tabs">
+              {requests.length === 0 && !isEditing ? (
+                <div
+                  style={{
+                    marginTop: "10px",
+                    fontSize: "20px",
+                  }}
+                >
+                  No Requests Available
+                </div>
+              ) : (
+                <>
+                  <Tabs />
+                  {isEditing && (
+                    <div className="tab">
+                      <form onSubmit={(e) => onSubmit(e)}>
+                        {/* @ts-ignore */}
+                        <input ref={inpRef} />
+                      </form>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
           </div>
-        </div>
-        <div className="main-action">
-          <RequestArea request={selectedRequest} />
-        </div>
+          <div className="main-action">
+            <RequestArea />
+          </div>
+        </RequestsContext.Provider>
       </div>
     </div>
   );

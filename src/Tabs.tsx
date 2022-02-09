@@ -1,23 +1,29 @@
-import { Dispatch, FC, SetStateAction } from "react";
-import { FetchyRequest, withStorage } from "./utils";
+import { FC, useContext, useEffect } from "react";
+import { withStorage } from "./utils";
 import { BiTrash } from "react-icons/bi";
-import { setDefaultResultOrder } from "dns";
+import { RequestsContext } from "./App";
 
-const Tabs: FC<{
-  requests: FetchyRequest[];
-  setRequests: Dispatch<SetStateAction<FetchyRequest[]>>;
-  setSelectedRequest: Dispatch<SetStateAction<FetchyRequest | null>>;
-  selectedRequest: FetchyRequest | null;
-}> = ({ requests, setRequests, setSelectedRequest, selectedRequest }) => {
+const Tabs: FC = () => {
+  const { requests, setRequests, setCurrentIndex, selectedRequest } =
+    useContext(RequestsContext);
+  useEffect(() => {
+    withStorage({
+      type: "setAll",
+      requests,
+    });
+  }, [requests]);
   return (
     <>
-      {requests.map((req) => {
+      {requests.map((req, i) => {
         return (
           <div
-            className="tab"
+            className={`tab ${
+              selectedRequest?.id === req.id ? "active" : "inactive"
+            }`}
             key={req.id}
+            id={req.id}
             onDoubleClick={() => {
-              setSelectedRequest(req);
+              setCurrentIndex(i);
             }}
           >
             <span>{req.title}</span>
@@ -30,11 +36,9 @@ const Tabs: FC<{
               onClick={() => {
                 setRequests((prev) => {
                   const filtered = prev.filter((p) => p.id !== req.id);
-                  req === selectedRequest && setSelectedRequest(null);
-                  withStorage({
-                    type: "setAll",
-                    requests: filtered,
-                  });
+                  if (req === selectedRequest) {
+                    setCurrentIndex(null);
+                  }
                   return filtered;
                 });
               }}

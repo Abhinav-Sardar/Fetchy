@@ -1,3 +1,4 @@
+@import url("https://fonts.googleapis.com/css2?family=Roboto:wght@300&display=swap");
 @import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai+Looped:wght@300&display=swap");
 @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@200&display=swap");
 :root {
@@ -19,10 +20,10 @@ body,
 }
 
 .main-area {
-  height: 80%;
+  height: 90%;
   width: 90%;
-  border: 1px solid black;
   display: flex;
+  border: 1px solid black;
 }
 
 .tabs-wrapper {
@@ -33,7 +34,6 @@ body,
 .main-action {
   height: 100%;
   flex: 2;
-  border: 1px solid black;
   width: 100%;
   display: flex;
   justify-content: center;
@@ -55,6 +55,7 @@ body,
   overflow-y: auto;
   height: 90%;
   text-align: center;
+  border-right: 1px solid gray;
 }
 .tab {
   height: 10%;
@@ -72,4 +73,78 @@ body,
 .main-action .empty h1 {
   font-size: 40px;
   font-family: "Poppins", sans-serif;
+}
+
+.tab > form {
+  height: 100%;
+  width: 100%;
+  justify-content: center;
+  align-items: center;
+  display: flex;
+}
+.tab input {
+  height: 50%;
+  width: 80%;
+  font-size: 15px;
+}
+.tab.active {
+  border: 3px solid black;
+}
+.searchbar {
+  flex: 0.5;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-bottom: 2px solid gray;
+}
+.searchbar form {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  height: 100%;
+  width: 100%;
+}
+.searchbar input {
+  width: 75%;
+  height: 60%;
+  border-radius: 5px;
+  padding-left: 5px;
+  border: 0;
+  outline: 1.5px solid gray;
+
+  caret-color: var(--accent-color);
+  font-size: 15px;
+}
+.searchbar button {
+  height: 60%;
+  width: 10%;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  font-size: 17px;
+  background-color: var(--accent-color);
+  border: 0;
+  outline: 0;
+  color: white;
+  border-radius: 5px;
+}
+.searchbar button svg {
+  font-size: 20px;
+}
+
+.request {
+  flex: 2;
+  width: 100%;
+  margin-left: 10px;
+}
+.response {
+  flex: 2;
+  width: 100%;
+  margin-left: 10px;
+}
+.section__title {
+  font-family: "Roboto", sans-serif;
+
+  font-size: 25px;
 }

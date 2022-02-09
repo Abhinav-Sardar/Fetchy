@@ -1,8 +1,13 @@
-import { FC } from "react";
+import { FC, useContext, useEffect } from "react";
 import { FetchyRequest } from "./utils";
 import { FaBan } from "react-icons/fa";
-const RequestArea: FC<{ request: FetchyRequest | null }> = ({ request }) => {
-  if (request === null) {
+import { RequestsContext } from "./App";
+import axios from "axios";
+import RequestPanel from "./RequestsPanel";
+const RequestArea: FC = () => {
+  const { selectedRequest } = useContext(RequestsContext);
+
+  if (selectedRequest === undefined) {
     return (
       <div
         className="empty"
@@ -19,7 +24,7 @@ const RequestArea: FC<{ request: FetchyRequest | null }> = ({ request }) => {
       </div>
     );
   } else {
-    return <h1>OONON</h1>;
+    return <RequestPanel />;
   }
 };
 export default RequestArea;
