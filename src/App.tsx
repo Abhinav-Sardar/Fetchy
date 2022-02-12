@@ -1,15 +1,10 @@
 import "./index.css";
 import { AiOutlinePlus } from "react-icons/ai";
 import { createContext, FormEvent, useEffect, useRef, useState } from "react";
-import {
-  FetchyRequest,
-  getRandomKey,
-  RequestsContextType,
-  withStorage,
-} from "./utils";
+import { FetchyRequest, getRandomKey, RequestsContextType, withStorage } from "./utils";
 import Tabs from "./Tabs";
-import { setDefaultResultOrder } from "dns";
 import RequestArea from "./RequestArea";
+
 // @ts-ignore
 export const RequestsContext = createContext<RequestsContextType>();
 function App(): JSX.Element {
@@ -18,30 +13,29 @@ function App(): JSX.Element {
   const inpRef = useRef<HTMLInputElement>();
   const [currentIndex, setCurrentIndex] = useState<number | null>(null);
   const selectedRequest = requests.find((req, index) => index === currentIndex);
+  useEffect(() => {
+    console.log(requests);
+  }, [requests]);
   const onSubmit = (e: FormEvent) => {
     e.preventDefault();
     const title = inpRef.current!.value;
 
     const newRequest: FetchyRequest = {
-      body: {
-        content: "",
-        contentType: "text/plain",
+      queryParams: [],
+      body: "",
+      headers: {
+        "user-agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.99 Safari/537.36",
       },
-      headers: {},
       id: getRandomKey(),
       title: title.trimStart().trimEnd(),
       url: "",
       method: "GET",
     };
-    if (
-      !title ||
-      !title.trim() ||
-      title.length >= 20 ||
-      withStorage({ type: "exists", title: newRequest.title })
-    ) {
+    if (!title || !title.trim() || title.length >= 20 || withStorage({ type: "exists", title: newRequest.title })) {
       alert("Invalid Title!");
     } else {
-      setRequests((prev) => [...prev, newRequest]);
+      setRequests(prev => [...prev, newRequest]);
       setIsEditing(false);
       withStorage({
         type: "set",
@@ -52,14 +46,14 @@ function App(): JSX.Element {
   useEffect(() => {
     if (isEditing) {
       inpRef.current!.focus();
-      document.addEventListener("keyup", (e) => {
+      document.addEventListener("keyup", e => {
         if (e.key === "Escape") {
           setIsEditing(false);
         }
       });
     }
     return () => {
-      document.removeEventListener("keyup", (e) => {
+      document.removeEventListener("keyup", e => {
         if (e.key === "Escape") {
           setIsEditing(false);
         }
@@ -73,8 +67,8 @@ function App(): JSX.Element {
   }, []);
 
   return (
-    <div className="page">
-      <div className="main-area">
+    <div className='page'>
+      <div className='main-area'>
         <RequestsContext.Provider
           value={{
             requests,
@@ -84,8 +78,8 @@ function App(): JSX.Element {
             selectedRequest,
           }}
         >
-          <div className="tabs-wrapper">
-            <div className="add-fetch">
+          <div className='tabs-wrapper'>
+            <div className='add-fetch'>
               <span>Add A Request</span>{" "}
               <AiOutlinePlus
                 style={{
@@ -101,7 +95,7 @@ function App(): JSX.Element {
                 }}
               />
             </div>
-            <div className="tabs">
+            <div className='tabs'>
               {requests.length === 0 && !isEditing ? (
                 <div
                   style={{
@@ -115,8 +109,8 @@ function App(): JSX.Element {
                 <>
                   <Tabs />
                   {isEditing && (
-                    <div className="tab">
-                      <form onSubmit={(e) => onSubmit(e)}>
+                    <div className='tab'>
+                      <form onSubmit={e => onSubmit(e)}>
                         {/* @ts-ignore */}
                         <input ref={inpRef} />
                       </form>
@@ -126,7 +120,7 @@ function App(): JSX.Element {
               )}
             </div>
           </div>
-          <div className="main-action">
+          <div className='main-action'>
             <RequestArea />
           </div>
         </RequestsContext.Provider>

@@ -1,4 +1,3 @@
-import axios, { Method } from "axios";
 import {
   FC,
   useContext,
@@ -9,40 +8,116 @@ import {
   Dispatch,
   SetStateAction,
   useEffect,
+  useLayoutEffect,
 } from "react";
-import { BiSend } from "react-icons/bi";
-import { AiOutlineSave } from "react-icons/ai";
-import { FetchyRequest, FetchyResponse, VerbsFunction, withStorage } from "./utils";
-import { RequestsContext } from "./App";
+import { BiSad, BiSend } from "react-icons/bi";
 
-const ResponseContext = createContext<
-  [FetchyResponse | {}, Dispatch<SetStateAction<FetchyResponse | {}>>] | null
->(null);
-const Tabs: FC = () => {
-  return <h1>HELLO I AM THE TAB</h1>;
+import { FetchyResponse, getRandomKey, VerbsFunction, getPairValues } from "./utils";
+import { RequestsContext } from "./App";
+import { AiOutlineLoading3Quarters } from "react-icons/ai";
+import { Body, Headers, QueryParams } from "./RequestSubComponents";
+
+// @ts-ignore
+const ResponseContext = createContext<[FetchyResponse, Dispatch<SetStateAction<FetchyResponse>>]>([{}, () => {}]);
+const Tabs: FC<{
+  tabs: string[];
+  currentTab: string;
+  setCurrentTab: Dispatch<SetStateAction<string>>;
+}> = ({ tabs, currentTab, setCurrentTab }) => {
+  return (
+    <>
+      <div className='tabs-selector-wrapper'>
+        {tabs.map(tab => {
+          return (
+            <div
+              className={`tab-selector ${currentTab === tab ? "active" : "inactive"}`}
+              onClick={() => setCurrentTab(tab)}
+              key={tab}
+            >
+              {tab}
+            </div>
+          );
+        })}
+      </div>
+    </>
+  );
 };
 const SearchBar: FC = () => {
   const { selectedRequest, setRequests, requests } = useContext(RequestsContext);
   const [text, setText] = useState(selectedRequest!.url);
+  const [response, setResponse] = useContext(ResponseContext);
   useEffect(() => {
     setText(selectedRequest!.url);
   }, [selectedRequest]);
-  const onFormSubmit = (e: FormEvent) => {
+  const onFormSubmit = async (e: FormEvent) => {
     e.preventDefault();
+    setResponse({ ...response, isLoading: true });
+    const existingReqs = [...requests];
+    const particularRequest = existingReqs.find(r => r === selectedRequest);
+    particularRequest!.url = text;
+    setRequests(existingReqs);
+    const { headers, body, method } = selectedRequest!;
+
+    const params = new URLSearchParams();
+
+    selectedRequest!.queryParams.forEach(param => {
+      const [key, value] = Object.entries(param)[0];
+      params.append(key, value);
+    });
+    if (!text || !text.trim()) return;
+    const newUrl = params.toString() === "" ? text : `${text}?${params.toString()}`;
+    if (method === "GET" || method === "DELETE") {
+      try {
+        const response = await VerbsFunction[method](newUrl, {
+          headers,
+        });
+        setResponse({
+          url: newUrl,
+          body: response.data,
+          headers: response.headers,
+          statusCode: response.status,
+          statusText: response.statusText,
+          isLoading: false,
+          isError: false,
+        });
+      } catch (e) {
+        // @ts-ignore
+        setResponse({ ...response, isError: true, error: e });
+      }
+    } else {
+      try {
+        const response = await VerbsFunction[method](newUrl, body, {
+          headers: selectedRequest!.headers,
+        });
+        setResponse({
+          url: newUrl,
+          body: response.data,
+
+          headers: response.headers,
+          statusCode: response.status,
+          statusText: response.statusText,
+          isLoading: false,
+
+          isError: false,
+        });
+      } catch (e) {
+        // @ts-ignore
+        setResponse({ ...response, isError: true, error: e });
+      }
+    }
   };
   return (
     <div className='searchbar'>
-      <form onSubmit={(e) => onFormSubmit(e)}>
+      <form onSubmit={e => onFormSubmit(e)}>
         <select
-        // onChange={(e) => {
-        //   setRequests(() => {
-        //     const existingReqs = [...requests];
-        //     const particularRequest = existingReqs.find((r) => r === selectedRequest);
-        //     particularRequest!.method = e.target.value as Method;
-
-        //     return existingReqs;
-        //   });
-        // }}
+          onChange={e => {
+            const existingReqs = [...requests];
+            const particularRequest = existingReqs.find(r => r === selectedRequest);
+            // @ts-ignore
+            particularRequest!.method = e.target.value;
+            setRequests(existingReqs);
+          }}
+          value={selectedRequest?.method}
         >
           <option value='GET'>GET</option>
           <option value='POST'>POST</option>
@@ -50,23 +125,8 @@ const SearchBar: FC = () => {
           <option value='PATCH'>PATCH</option>
           <option value='DELETE'>DELETE</option>
         </select>
-        <button
-          onClick={() => {
-            setRequests(() => {
-              const existingReqs = [...requests];
-              const particularRequest = existingReqs.find((r) => r === selectedRequest);
-              particularRequest!.url = text;
 
-              return existingReqs;
-            });
-          }}
-          style={{
-            width: "5%",
-          }}
-          type='button'>
-          <AiOutlineSave />
-        </button>
-        <input type='text' value={text} onChange={(e) => setText(e.target.value)} />
+        <input type='text' value={text} onChange={e => setText(e.target.value)} />
 
         <button type='submit'>
           Send <BiSend />
@@ -76,24 +136,69 @@ const SearchBar: FC = () => {
   );
 };
 const RequestArea: FC = memo(() => {
-  const { selectedRequest } = useContext(RequestsContext);
+  const { selectedRequest, requests, setRequests } = useContext(RequestsContext);
+  const [queryParams, setQueryParams] = useState<{ [key: string]: string }[]>([]);
+  const tabs = ["Headers", "Body", "Query Params"];
+  const [currentTab, setCurrentTab] = useState<string>("Body");
+  const [body, setBody] = useState<string>(selectedRequest!.body);
+
   return (
     <div className='request'>
       <h2 className='section__title'>Request</h2>
-
-      {JSON.stringify(selectedRequest)}
+      <div className='content'>
+        <Tabs currentTab={currentTab} tabs={tabs} setCurrentTab={setCurrentTab} />
+        <div className='info'>
+          {currentTab === "Headers" ? (
+            <>
+              <Headers />
+            </>
+          ) : currentTab === "Body" ? (
+            <Body />
+          ) : (
+            <>
+              <QueryParams />
+            </>
+          )}
+        </div>
+      </div>
     </div>
   );
 });
 const ResponseArea: FC = memo(() => {
+  const [response, setResponse] = useContext(ResponseContext);
+
+  console.log(response.error);
   return (
     <div className='response'>
-      <h2 className='section__title'>Response</h2>
+      <div className='header'>
+        <h2 className='section__title'>Response</h2>
+        {!response.isError && !response.isLoading && (
+          <span>
+            Status {response.statusCode} {response.statusText}
+          </span>
+        )}
+      </div>
+      <div className='content'>
+        {response.isError ? (
+          <div className='sinban'>
+            <BiSad />
+            <p>{String(response.error)}</p>
+          </div>
+        ) : response.isLoading ? (
+          <div className='sinban'>
+            <AiOutlineLoading3Quarters />
+            <p>Fetching...</p>
+          </div>
+        ) : (
+          ""
+        )}
+      </div>
     </div>
   );
 });
 const RequestPanel: FC = () => {
-  const responseState = useState<FetchyResponse | {}>({});
+  // @ts-ignore
+  const responseState = useState<FetchyResponse>({});
 
   return (
     <>

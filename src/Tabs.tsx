@@ -4,8 +4,7 @@ import { BiTrash } from "react-icons/bi";
 import { RequestsContext } from "./App";
 
 const Tabs: FC = () => {
-  const { requests, setRequests, setCurrentIndex, selectedRequest } =
-    useContext(RequestsContext);
+  const { requests, setRequests, setCurrentIndex, selectedRequest } = useContext(RequestsContext);
   useEffect(() => {
     withStorage({
       type: "setAll",
@@ -17,15 +16,12 @@ const Tabs: FC = () => {
       {requests.map((req, i) => {
         return (
           <div
-            className={`tab ${
-              selectedRequest?.id === req.id ? "active" : "inactive"
-            }`}
+            className={`tab ${selectedRequest?.id === req.id ? "active" : "inactive"}`}
             key={req.id}
             id={req.id}
             onDoubleClick={() => {
               setCurrentIndex(i);
-            }}
-          >
+            }}>
             <span>{req.title}</span>
             <BiTrash
               style={{

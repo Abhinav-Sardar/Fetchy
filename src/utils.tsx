@@ -1,6 +1,5 @@
-import axios, { Method } from "axios";
-import { METHODS } from "http";
-import { Dispatch, SetStateAction } from "react";
+import axios from "axios";
+import { Dispatch, FC, SetStateAction, useEffect } from "react";
 
 export const getRandomKey: () => string = () => {
   const alphas = "abcdefghijklmnopqrstuvwxyz";
@@ -22,11 +21,9 @@ export interface FetchyRequest {
     [key: string]: string;
   };
   title: string;
-  body: {
-    contentType: "text/html" | "text/plain" | "application/json";
-    content: string;
-  };
-  method: Method;
+  body: string;
+  method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
+  queryParams: { [key: string]: string }[];
 }
 type useLocalStorageType =
   | { type: "get" }
@@ -46,7 +43,7 @@ export const withStorage: (param: useLocalStorageType) => FetchyRequest[] | bool
   } else if (param.type === "exists") {
     const requests: FetchyRequest[] = JSON.parse(localStorage.getItem("requests") || "[]");
 
-    const exists = Boolean(requests.find((request) => request.title === param.title));
+    const exists = Boolean(requests.find(request => request.title === param.title));
     return exists;
   } else {
     localStorage.setItem("requests", JSON.stringify(param.requests));
@@ -63,13 +60,15 @@ export interface RequestsContextType {
 
 export interface FetchyResponse {
   url: string;
-  request: FetchyRequest;
-  response: {
-    body: string;
-    headers: {
-      [key: string]: string;
-    };
+  body: string;
+  headers: {
+    [key: string]: string;
   };
+  statusText: string;
+  statusCode: number;
+  isLoading: boolean;
+  isError: boolean;
+  error?: string;
 }
 
 export const VerbsFunction = {
@@ -78,4 +77,15 @@ export const VerbsFunction = {
   PUT: axios.put,
   PATCH: axios.patch,
   DELETE: axios.delete,
+};
+
+export const getPairValues: () => [string, string] = () => {
+  const value1 = prompt("Value1");
+  const value2 = prompt("Value2");
+  if (!value1 || !value1.trim() || !value2?.trim() || !value2) {
+    alert("Invalid Values");
+    throw "Error";
+  } else {
+    return [value1, value2];
+  }
 };
