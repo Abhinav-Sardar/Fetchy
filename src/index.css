@@ -7,6 +7,7 @@
 * {
   margin: 0;
   padding: 0;
+  box-sizing: border-box;
 }
 html,
 body,
@@ -238,4 +239,26 @@ option {
 }
 .response .header span {
   margin-right: 10px;
+}
+.sinban {
+  height: 100%;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+}
+.sinban > p {
+  font-size: 2rem;
+}
+.sinban svg {
+  font-size: 50px;
+}
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }

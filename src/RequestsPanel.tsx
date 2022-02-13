@@ -16,6 +16,8 @@ import { FetchyResponse, getRandomKey, VerbsFunction, getPairValues } from "./ut
 import { RequestsContext } from "./App";
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
 import { Body, Headers, QueryParams } from "./RequestSubComponents";
+import { resolveSrv } from "dns/promises";
+import { Axios } from "axios";
 
 // @ts-ignore
 const ResponseContext = createContext<[FetchyResponse, Dispatch<SetStateAction<FetchyResponse>>]>([{}, () => {}]);
@@ -71,6 +73,7 @@ const SearchBar: FC = () => {
         const response = await VerbsFunction[method](newUrl, {
           headers,
         });
+
         setResponse({
           url: newUrl,
           body: response.data,
@@ -164,10 +167,12 @@ const RequestArea: FC = memo(() => {
     </div>
   );
 });
+
 const ResponseArea: FC = memo(() => {
   const [response, setResponse] = useContext(ResponseContext);
-
-  console.log(response.error);
+  const tabs = ["Headers", "Body"];
+  const [currentTab, setCurrentTab] = useState("Body");
+  console.log(response.headers);
   return (
     <div className='response'>
       <div className='header'>
@@ -180,17 +185,123 @@ const ResponseArea: FC = memo(() => {
       </div>
       <div className='content'>
         {response.isError ? (
-          <div className='sinban'>
+          <div
+            className='sinban'
+            style={{
+              color: "red",
+            }}
+          >
             <BiSad />
             <p>{String(response.error)}</p>
           </div>
         ) : response.isLoading ? (
-          <div className='sinban'>
-            <AiOutlineLoading3Quarters />
+          <div className='sinban' style={{ color: "var(--accent-color)" }}>
+            <AiOutlineLoading3Quarters
+              style={{
+                animation: "spin 1s linear infinite",
+              }}
+            />
             <p>Fetching...</p>
           </div>
-        ) : (
+        ) : !response.body && !response.statusCode && !response.statusText ? (
           ""
+        ) : (
+          <>
+            <div
+              className='response-cont'
+              style={{
+                height: "100%",
+                width: "100%",
+                display: "flex",
+                flexDirection: "column",
+              }}
+            >
+              <div className='tabs-selector-wrapper'>
+                {tabs.map(tab => (
+                  <div
+                    key={tab}
+                    className={`tab-selector ${currentTab === tab ? "active" : "inactive"}`}
+                    onClick={() => {
+                      setCurrentTab(tab);
+                    }}
+                  >
+                    {tab}
+                  </div>
+                ))}
+              </div>
+              <div className='content'>
+                {currentTab === "Headers" ? (
+                  <div
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      height: "100%",
+                      width: "100%",
+                      overflowY: "auto",
+                    }}
+                  >
+                    {Object.entries(response.headers || []).map(([key, value]) => (
+                      <div
+                        className='section-wrapper'
+                        style={{
+                          width: "100%",
+                          display: "flex",
+                        }}
+                      >
+                        <div
+                          className='section-title'
+                          style={{
+                            height: "30px",
+                            width: "20%",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "space-around",
+                          }}
+                        >
+                          {key}
+                        </div>
+                        <div
+                          className='section-content'
+                          style={{
+                            height: "30px",
+                            width: "80%",
+
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                          }}
+                        >
+                          {value}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : typeof response.body === "object" ? (
+                  <div
+                    className='response-body'
+                    style={{
+                      height: "100%",
+                      width: "100%",
+                      overflowY: "auto",
+                    }}
+                  >
+                    {JSON.stringify(response.body, null, " ")}
+                  </div>
+                ) : (
+                  <div
+                    className='response-body'
+                    style={{
+                      height: "100%",
+                      width: "100%",
+                      overflowY: "auto",
+                    }}
+                  >
+                    {response.body}
+                  </div>
+                )}
+              </div>
+            </div>
+          </>
         )}
       </div>
     </div>
